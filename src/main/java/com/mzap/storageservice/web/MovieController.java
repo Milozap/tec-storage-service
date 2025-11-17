@@ -10,12 +10,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Random;
+
 @RestController
 @RequestMapping("/movies")
 public class MovieController {
 
     private static final Logger logger = LoggerFactory.getLogger(MovieController.class);
     private final MovieService service;
+    private final Random random = new Random();
 
     public MovieController(MovieService service) {
         this.service = service;
@@ -75,5 +78,28 @@ public class MovieController {
         return ResponseEntity.noContent().build();
     }
 
+    @GetMapping("/dev/chaos")
+    public ResponseEntity<String> chaos(
+            @RequestParam(name = "delay", defaultValue = "0") long delay,
+            @RequestParam(name = "errorRate", defaultValue = "0.0") double errorRate,
+            @RequestHeader(value = "X-Correlation-ID", required = false) String correlationId
+    ) {
+        logger.info("GET /movies/dev/chaos delay={} errorRate={} correlationId={}", delay, errorRate, correlationId);
 
+        if(delay > 0) {
+            try {
+                Thread.sleep(delay);
+            } catch (InterruptedException _) {
+                Thread.currentThread().interrupt();
+                logger.warn("Chaos sleep interrupted, correlationId={}", correlationId);
+            }
+        }
+
+        if(errorRate > 0 && random.nextDouble() < errorRate) {
+            logger.warn("Chaos endpoint: throwing simulated error, correlationId={}", correlationId);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Simulated error from chaos endpoint");
+        }
+
+        return ResponseEntity.ok("Ok from chaos endpoint");
+    }
 }

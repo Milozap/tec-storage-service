@@ -1,6 +1,7 @@
 package com.mzap.storageservice.entity;
 
 import jakarta.persistence.*;
+import org.springframework.data.annotation.CreatedDate;
 
 import java.time.LocalDateTime;
 
@@ -11,6 +12,7 @@ public class Movie {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
 
+    @CreatedDate
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -20,12 +22,12 @@ public class Movie {
     @Column(nullable = false)
     private String genre;
 
-    @Column(nullable = false)
-    private int year;
+    @Column(name = "release_year", nullable = false)
+    private int releaseYear;
 
     @PrePersist
-    protected void onCreate() {
-        createdAt = LocalDateTime.now();
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
     }
 
     public Movie() {}
@@ -50,12 +52,12 @@ public class Movie {
         this.genre = genre;
     }
 
-    public int getYear() {
-        return year;
+    public int getReleaseYear() {
+        return releaseYear;
     }
 
-    public void setYear(int year) {
-        this.year = year;
+    public void setReleaseYear(int year) {
+        this.releaseYear = year;
     }
 
     public LocalDateTime getCreatedAt() {

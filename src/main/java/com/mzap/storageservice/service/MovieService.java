@@ -39,7 +39,7 @@ public class MovieService {
 
         original.setTitle(movie.getTitle());
         original.setGenre(movie.getGenre());
-        original.setYear(movie.getYear());
+        original.setReleaseYear(movie.getReleaseYear());
 
         return Optional.of(repository.save(original));
     }
