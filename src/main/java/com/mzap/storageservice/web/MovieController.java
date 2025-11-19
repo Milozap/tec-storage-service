@@ -25,11 +25,16 @@ public class MovieController {
     }
 
     @GetMapping
-    public Page<Movie> getAll(
+    public Page<Movie> getPage(
             Pageable pageable,
-            @RequestHeader(value = "X-Correlation-ID", required = false) String correlationId
+            @RequestHeader(value = "X-Correlation-ID", required = false) String correlationId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size
     ) {
-        logger.info("GET /movies correlationId={}", correlationId);
+        logger.info("GET /movies correlationId={}, page={}, size={}", correlationId, page, size);
+        Pageable.ofSize(size);
+        pageable.withPage(page);
+
         return service.getAll(pageable);
     }
 
