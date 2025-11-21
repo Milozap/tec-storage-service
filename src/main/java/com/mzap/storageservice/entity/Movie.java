@@ -30,8 +30,6 @@ public class Movie {
         this.createdAt = LocalDateTime.now();
     }
 
-    public Movie() {}
-
     public long getId() {
         return id;
     }
