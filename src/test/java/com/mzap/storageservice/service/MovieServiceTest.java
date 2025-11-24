@@ -13,6 +13,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 
 import java.util.List;
 import java.util.Optional;
@@ -117,7 +118,7 @@ class MovieServiceTest {
     @Test
     @DisplayName("update throws when the movie is not found")
     void updateNotFound() {
-        Movie movie = createMovie("X");
+        Movie movie = createMovie("Movie 1");
 
         when(repository.findById(999L)).thenReturn(Optional.empty());
         RuntimeException exception = assertThrows(
@@ -133,5 +134,23 @@ class MovieServiceTest {
     void deleteById() {
         service.delete(7L);
         verify(repository).deleteById(7L);
+    }
+
+    @Test
+    @DisplayName("search delegates to repository.findAll with Specification and pageable")
+    void searchDelegatesToRepoWithSpec() {
+        Pageable pageable = PageRequest.of(0, 10);
+        List<Movie> movies = List.of(createMovie("Movie 1"), createMovie("Movie 2"));
+
+        ArgumentCaptor<Specification<Movie>> specCaptor = ArgumentCaptor.forClass(Specification.class);
+
+        when(repository.findAll(any(Specification.class), eq(pageable)))
+                .thenReturn(new PageImpl<>(movies, pageable, movies.size()));
+
+        Page<Movie> result = service.search(pageable, "Movie 2", "Genre", 1990, 1991);
+
+        assertEquals(2, result.getContent().size());
+        verify(repository).findAll(specCaptor.capture(), eq(pageable));
+        assertNotNull(specCaptor.getValue());
     }
 }

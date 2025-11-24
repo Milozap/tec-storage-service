@@ -73,6 +73,41 @@ class MovieControllerTest {
     }
 
     @Test
+    @DisplayName("GET /movies supports filtering and sorting via query params")
+    void getMoviesWithFiltersAndSorting() throws Exception {
+        Pageable pageable = PageRequest.of(1, 3);
+        List<Movie> list = List.of(createMovie("Movie 1"), createMovie("Movie 2"));
+        Page<Movie> page = new PageImpl<>(list, pageable, 8);
+
+        when(service.search(any(Pageable.class), eq("Movie"), eq("Genre"), eq(1990), eq(2026)))
+                .thenReturn(page);
+
+        mockMvc.perform(
+                get("/movies")
+                        .param("title", "Movie")
+                        .param("genre", "Genre")
+                        .param("yearFrom", "1990")
+                        .param("yearTo", "2026")
+                        .param("page", "1")
+                        .param("size", "3")
+                        .param("sort", "title,desc")
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.pageable.pageNumber", is(1)))
+                .andExpect(jsonPath("$.pageable.pageSize", is(3)))
+                .andExpect(jsonPath("$.content", hasSize(2)))
+                .andExpect(jsonPath("$.totalElements", is(8)));
+
+        ArgumentCaptor<Pageable> pageableCaptor = ArgumentCaptor.forClass(Pageable.class);
+        verify(service).search(pageableCaptor.capture(), eq("Movie"), eq("Genre"), eq(1990), eq(2026));
+
+        Pageable returnedPageable = pageableCaptor.getValue();
+        assertEquals(1, returnedPageable.getPageNumber());
+        assertEquals(3, returnedPageable.getPageSize());
+        assertTrue(returnedPageable.getSort().getOrderFor("title").isDescending());
+    }
+
+    @Test
     @DisplayName("GET /movies/{id} returns 200 with body")
     void getByIdFound() throws Exception {
         Movie movie = createMovie("Movie 1");

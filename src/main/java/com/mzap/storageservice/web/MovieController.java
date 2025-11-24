@@ -28,13 +28,18 @@ public class MovieController {
     public Page<Movie> getPage(
             Pageable pageable,
             @RequestHeader(value = "X-Correlation-ID", required = false) String correlationId,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "20") int size
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String genre,
+            @RequestParam(required = false) Integer yearFrom,
+            @RequestParam(required = false) Integer yearTo
     ) {
-        logger.info("GET /movies correlationId={}, page={}, size={}", correlationId, page, size);
-        Pageable.ofSize(size);
-        pageable.withPage(page);
+        logger.info("GET /movies correlationId={}, pageable={}, filters: title={}, genre={}, yearFrom={}, yearTo={}",
+                correlationId, pageable, title, genre, yearFrom, yearTo);
 
+        boolean hasFilters = (title != null && !title.isBlank()) || (genre != null && !genre.isBlank()) || yearFrom != null || yearTo != null;
+        if (hasFilters) {
+            return service.search(pageable, title, genre, yearFrom, yearTo);
+        }
         return service.getAll(pageable);
     }
 

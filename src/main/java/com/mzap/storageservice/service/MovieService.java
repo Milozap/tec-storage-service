@@ -4,6 +4,7 @@ import com.mzap.storageservice.entity.Movie;
 import com.mzap.storageservice.repository.MovieRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,6 +21,37 @@ public class MovieService {
 
     public Page<Movie> getAll(Pageable pageable) {
         return repository.findAll(pageable);
+    }
+
+    public Page<Movie> search(Pageable pageable, String title, String genre, Integer yearFrom, Integer yearTo) {
+        Specification<Movie> spec = Specification.allOf();
+
+        if (title != null && !title.isBlank()) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.like(cb.lower(root.get("title")), "%" + title.toLowerCase() + "%")
+            );
+        }
+        if (genre != null && !genre.isBlank()) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.equal(cb.lower(root.get("genre")), genre.toLowerCase())
+            );
+        }
+        if (yearFrom != null) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.greaterThanOrEqualTo(root.get("releaseYear"), yearFrom)
+            );
+        }
+        if (yearTo != null) {
+            spec = spec.and(
+                    (root, query, cb) ->
+                            cb.lessThanOrEqualTo(root.get("releaseYear"), yearTo)
+            );
+        }
+
+        return repository.findAll(spec, pageable);
     }
 
     public Optional<Movie> getById(Long id) {
