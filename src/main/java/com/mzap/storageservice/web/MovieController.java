@@ -61,7 +61,7 @@ public class MovieController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Movie> create(
+    public ResponseEntity<Movie> update(
             @PathVariable Long id,
             @RequestBody Movie movie,
             @RequestHeader(value = "X-Correlation-ID", required = false) String correlationId
